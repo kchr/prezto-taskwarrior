@@ -1,0 +1,60 @@
+function task-info {
+  local action
+
+  local inbox_count
+  local inbox_count_format
+  local total_count
+  local total_count_format
+
+  local prompt_format
+
+  # Clean up previous $git_info.
+  unset task_info
+  typeset -gA task_info
+
+  if (( $# > 0 )); then
+    case "$1" in
+      count)
+        task count
+        ;;
+      incount)
+        task +in +PENDING count
+        ;;
+    esac
+
+    return 0
+  fi
+
+  # Inbox count.
+  zstyle -s ':prezto:module:task:info:inbox' format 'inbox_count_format'
+  if [[ -n "$inbox_count_format" ]]; then
+    inbox_count="$(task-info incount)"
+    if [[ -n "$inbox_count" ]]; then
+      zformat -f inbox_count_formatted "$inbox_count_format" "n:$inbox_count"
+    fi
+  fi
+
+  # Total count.
+  zstyle -s ':prezto:module:task:info:total' format 'total_count_format'
+  if [[ -n "$total_count_format" ]]; then
+    total_count="$(task-info count)"
+    if [[ -n "$total_count" ]]; then
+      zformat -f total_count_formatted "$total_count_format" "n:$total_count"
+    fi
+  fi
+
+  # Format info.
+  zstyle -s ':prezto:module:task:info:prompt' format 'prompt_format'
+
+  zformat -f REPLY "$prompt_format" \
+    "I:$inbox_count_formatted" \
+    "T:$total_count_formatted"
+
+  task_info[prompt]="$REPLY"
+
+  unset REPLY
+
+  return 0
+}
+
+task-info "$@"
